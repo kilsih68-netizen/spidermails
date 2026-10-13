@@ -513,8 +513,40 @@ function render(){
   updateSyncDot();
   renderUserDetailModal();
   renderModeModal();
+  renderWaPopup();
 }
-
+function renderWaPopup(){
+  const root=$('cfmRoot');
+  if(state.modeModalEmail||state.userDetailEmail)return;
+  if(state.view!=='user')return;
+  const s=settings();
+  if(!s.waPopupEnabled||!s.waLink||!isValidWaLink(s.waLink))return;
+  const popupKey='spidermails_wa_popup_shown';
+  if(localStorage.getItem(popupKey))return;
+  const u=me();
+  if(!u)return;
+  localStorage.setItem(popupKey,'1');
+  setTimeout(()=>{
+    const overlay=document.createElement('div');
+    overlay.className='cfm-overlay';
+    overlay.id='cfmOverlay';
+    overlay.innerHTML=`<div class="cfm-modal">
+      <div class="cfm-icon info" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#16a34a;border-color:#a6f4c5">${waIcon(32)}</div>
+      <h3>Join Channel WhatsApp!</h3>
+      <p>Dapatkan info setoran terbaru, bonus, dan update harga langsung di channel resmi kami.</p>
+      <div class="cfm-actions" style="grid-template-columns:1fr">
+        <button type="button" class="cfm-btn" style="background:linear-gradient(135deg,#4ade80,#16a34a);grid-column:1/-1" id="waPopupJoin">${waIcon(16)} Join Sekarang</button>
+        <button type="button" class="cfm-btn cancel" style="grid-column:1/-1;margin-top:8px" id="waPopupClose">Nanti Saja</button>
+      </div>
+    </div>`;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(()=>overlay.classList.add('show'));
+    const close=()=>{overlay.classList.remove('show');setTimeout(()=>overlay.remove(),200)};
+    document.getElementById('waPopupClose').onclick=close;
+    document.getElementById('waPopupJoin').onclick=()=>{window.open(s.waLink,'_blank','noopener,noreferrer');close()};
+    overlay.onclick=e=>{if(e.target===overlay)close()};
+  },1500);
+}
 function renderAuth(){const tab=state.authTab;let body='';if(tab==='login')body=viewLogin();else if(tab==='register')body=viewRegister();else body=viewForgot();const rightBtn=tab==='login'?`<button type="button" class="top-btn" data-act="authtab" data-tab="register">Daftar ${icon('userPlus',14)}</button>`:`<button type="button" class="top-btn" data-act="authtab" data-tab="login">Masuk ${icon('arrowRight',14)}</button>`;return `<div class="auth-page"><div class="auth-top"><div class="auth-brand"><div class="logo">${renderLogoMark()}</div><span class="name">SPIDER${gmailM(22)}AILS</span></div>${rightBtn}</div><div class="auth-body"><div class="auth-card">${body}</div><div class="auth-foot">© 2025 SPIDERMAILS · Platform Setor Gmail</div></div></div>`}
 function viewLogin(){return `<h2>Selamat Datang <span class="wave">👋</span></h2><p class="sub">Masuk untuk mulai setor gmail Anda.</p><button type="button" class="abtn-google" data-act="google-login">${googleIcon(20)}<span>Lanjut dengan Google</span></button><div class="auth-divider">ATAU</div><form data-act="login"><div class="afield"><label>Email</label><div class="ainput-wrap"><span class="lead">${icon('envelope',17)}</span><input type="email" id="loginEmail" placeholder="nama@gmail.com" required></div></div><div class="afield"><label>Password</label><div class="ainput-wrap"><span class="lead">${icon('lock',17)}</span><input type="password" id="loginPass" placeholder="Masukkan password" required><span class="trail"><button type="button" class="ainput-icon-btn" data-act="toggle-pw" data-target="loginPass">${icon('eye',17)}</button></span></div></div><div class="forgot-row"><button type="button" class="alink" data-act="authtab" data-tab="forgot">Lupa password?</button></div><button type="submit" class="abtn-primary"><span>Masuk</span>${icon('arrowRight',18)}</button></form>`}
 function viewRegister(){return `<h2>Buat Akun <span class="wave">🚀</span></h2><p class="sub">Daftar gratis dan mulai hasilkan cuan.</p><button type="button" class="abtn-google" data-act="google-login">${googleIcon(20)}<span>Daftar dengan Google</span></button><div class="auth-divider">ATAU ISI MANUAL</div><form data-act="register"><div class="afield"><label>Email</label><div class="ainput-wrap"><span class="lead">${icon('envelope',17)}</span><input type="email" id="regEmail" placeholder="nama@gmail.com" required></div></div><div class="afield"><label>Password</label><div class="ainput-wrap"><span class="lead">${icon('lock',17)}</span><input type="password" id="regPass" placeholder="Minimal 6 karakter" required></div></div><div class="afield"><label>Konfirmasi Password</label><div class="ainput-wrap"><span class="lead">${icon('shield',17)}</span><input type="password" id="regPass2" placeholder="Ulangi password" required></div></div><div class="afield"><label>Nickname</label><div class="ainput-wrap"><span class="lead">${icon('user',17)}</span><input type="text" id="regNick" placeholder="cth: spideruser" maxlength="20" required></div></div><div class="afield"><label>Nomor HP Aktif</label><div class="ainput-wrap"><span class="lead">${icon('user',17)}</span><input type="tel" id="regPhone" placeholder="628xxxxxxxxxx" inputmode="tel" required></div></div><button type="submit" class="abtn-primary"><span>Daftar Sekarang</span>${icon('arrowRight',18)}</button></form>`}
